@@ -67,5 +67,66 @@ The contract is initialized with two owners. Both owners must be non-zero addres
 ### Usage
 To use this contract, deploy it with two owner addresses. Owners can then interact with the contract functions to manage funds, create and manage trading positions, and execute token swaps.
 
-### License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Step-by-Step Explanation of Two-Owner Approval, and Execute Withdrawals Functions
+
+### 1. Approve Transactions
+**Function**: `approveTransfer(bool approval)`
+
+**Step-by-Step**:
+- **Initiate Approval**: One of the owners calls `approveTransfer` with `true` as the argument to indicate approval.
+- **Set Approval Status**: The contract records the approval status for the owner who called the function. If the other owner has also approved, both approval flags are set to `true`.
+- **Approval Timestamp**: If both owners have approved, the contract sets an `approvalTimestamp` to mark when both approvals were granted.
+
+**Security Benefit**: This function ensures that both owners must agree on important transactions, preventing unilateral actions by a single owner. The use of a timestamp further ensures that approvals have a time limit, adding a layer of security by preventing stale approvals from being used.
+
+### 2. Request Withdrawals
+**Functions**:
+- `requestWithdrawal(uint256 amount)` (for native AVAX)
+- `requestTokenWithdrawal(address token, uint256 amount)` (for ERC-20 tokens)
+
+**Step-by-Step**:
+- **Check Balance**: The contract checks if the requested withdrawal amount is available in the contract.
+- **Check for Pending Withdrawals**: The contract ensures that there are no other pending withdrawals. Only one withdrawal request can be active at a time.
+- **Create Withdrawal Request**: The contract stores the withdrawal request details (amount, timestamp, requester) in `pendingWithdrawal` or `pendingTokenWithdrawals`, depending on the type of withdrawal.
+- **Emit Event**: The contract emits a `WithdrawalRequested` or `TokenWithdrawalRequested` event to log the request.
+
+**Security Benefit**: This function ensures that withdrawal requests are formally logged and must be approved by both owners before being executed, adding a layer of accountability and traceability.
+
+### 3. Two-Owner Approval
+**Function**: `approveTransfer(bool approval)` (described earlier)
+
+**Step-by-Step**:
+- **Owner 1 Approval**: One owner calls `approveTransfer` to indicate their approval for the pending withdrawal.
+- **Owner 2 Approval**: The second owner must also call `approveTransfer` to give their approval.
+- **Both Approvals Verified**: The contract verifies that both owners have approved the transaction within a certain time window (e.g., within one hour of the first approval).
+
+**Security Benefit**: Requiring approval from both owners ensures that no single owner can unilaterally withdraw funds, preventing misuse or theft of funds.
+
+### 4. Execute Withdrawals
+**Functions**:
+- `executeWithdrawal()` (for native AVAX)
+- `executeTokenWithdrawal(address token)` (for ERC-20 tokens)
+
+**Step-by-Step**:
+- **Check Approvals**: The contract checks that both owners have approved the withdrawal request.
+- **Check Approval Expiry**: The contract ensures that the approvals are still valid (i.e., they haven't expired).
+- **Verify Non-Requester Execution**: The owner who requested the withdrawal cannot be the one to execute it, ensuring a separation of duties.
+- **Perform Withdrawal**: The contract executes the withdrawal by transferring the specified amount of AVAX or tokens to both owners equally.
+- **Reset Pending Withdrawals**: The pending withdrawal request is cleared, and the approvals are reset.
+- **Emit Event**: A `Withdrawal` or `TokenWithdrawal` event is emitted to log the successful withdrawal.
+
+**Security Benefit**: This process ensures that funds can only be withdrawn after both owners have approved the transaction, and the approvals are time-bound to avoid exploitation. The separation of the request and execution duties among the owners further enhances security by ensuring that no single owner can both request and execute a withdrawal.
+
+### Security Benefits of These Functions
+
+- **Dual Ownership Requirement**: All critical operations, such as withdrawals and approvals, require the consent of both owners. This multi-signature (multi-sig) approach ensures that no single individual has control over the contract, greatly reducing the risk of malicious actions or errors.
+
+- **Time-Limited Approvals**: By tying approvals to a timestamp, the contract ensures that approvals have a limited validity period. This prevents potential security issues where an old approval could be maliciously or accidentally used to withdraw funds.
+
+- **Transparency and Traceability**: All actions are logged via events, making it easy to audit and trace the history of transactions. This provides accountability and helps in detecting any unauthorized actions.
+
+- **Separation of Duties**: The requirement that the requester cannot execute the withdrawal introduces a separation of duties, further preventing any single owner from having too much control over the funds.
+
+- **Prevention of Stale Approvals**: By resetting approvals after each action, the contract prevents previously granted approvals from being reused inappropriately, thereby minimizing the risk of stale approvals being exploited.
+
+
