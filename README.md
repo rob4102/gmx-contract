@@ -2,7 +2,7 @@
 
 ## Overview
 
-`Tenet Wallet v4` is a Solidity smart contract designed to manage a dual-ownership wallet with built-in support for interacting with DeFi protocols. The contract allows two owners to jointly manage deposits, withdrawals, and token swaps. It integrates with external DeFi contracts such as `OrderBook`, `PositionRouter`, and `Router` to create and manage trading positions, execute swaps, and approve token spending.
+`Tenet Wallet v4` is a Solidity smart contract designed to manage a dual-ownership wallet with built-in support for interacting with DeFi protocols. The contract allows two owners to jointly manage deposits, withdrawals, and token swaps. It integrates with GMX contracts; `OrderBook`, `PositionRouter`, and `Router` to create and manage trading positions, execute swaps, and approve token spending.
 
 ## Features
 
