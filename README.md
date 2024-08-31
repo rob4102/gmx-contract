@@ -16,7 +16,7 @@
 
 ### Constructor
 
-```solidity
+`solidity
 constructor(address _owner1, address _owner2)
 
 ### Initializes the Contract
