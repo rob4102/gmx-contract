@@ -129,4 +129,23 @@ To use this contract, deploy it with two owner addresses. Owners can then intera
 
 - **Prevention of Stale Approvals**: By resetting approvals after each action, the contract prevents previously granted approvals from being reused inappropriately, thereby minimizing the risk of stale approvals being exploited.
 
+### Create Increase Position
+**Description**:  
+The `createIncreasePosition` function allows the contract to interact with an external `PositionRouter` contract to increase a trading position on behalf of the owners. This function is primarily used to add leverage to an existing position or to initiate a new position with leverage.
+
+**Parameters**:
+
+- **`path`**: An array of addresses representing the token swap path. The first address is the input token, and the last address is the output token.
+- **`indexToken`**: The address of the token that will be indexed in the position (e.g., the asset being traded).
+- **`amountIn`**: The amount of input tokens to be used to increase the position.
+- **`minOut`**: The minimum acceptable output amount after any swaps, to avoid slippage.
+- **`sizeDelta`**: The change in the size of the position, which could represent adding more collateral or increasing leverage.
+- **`isLong`**: A boolean value indicating whether the position is long (`true`) or short (`false`).
+- **`acceptablePrice`**: The maximum acceptable price for increasing the position (for long positions) or the minimum acceptable price (for short positions).
+- **`executionFee`**: The fee paid for executing the increase position transaction.
+- **`referralCode`**: A referral code used to track referrals associated with this transaction, if any.
+- **`callbackTarget`**: An address that will be called back with the result of the transaction, typically used for further processing.
+
+**Access Control**:  
+This function can only be called by the owners of the contract, as enforced by the `onlyOwners` modifier.
 
