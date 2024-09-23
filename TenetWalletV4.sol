@@ -22,8 +22,6 @@ interface IOrderBook {
         uint256 _triggerPrice,
         bool _triggerAboveThreshold
     ) external;
-
-    function cancelDecreaseOrder(uint256 _orderIndex) external;
 }
 
 // Interface for the Position Router
@@ -74,7 +72,7 @@ contract TenetWalletv4 {
     bool public owner2Approval;
     uint256 public approvalTimestamp;
     mapping(address => uint256) public ownerBalance;
-    string public ContractName = "TENET v4";
+    string public ContractName;
 
     // Define the token constants
     address public constant USDC_ADDRESS =
@@ -123,11 +121,16 @@ contract TenetWalletv4 {
     );
     event ApprovalGranted(address indexed owner, bool approved);
 
-    constructor(address _owner1, address _owner2) {
+    constructor(
+        address _owner1,
+        address _owner2,
+        string memory _contractName
+    ) {
         require(
             _owner1 != address(0) && _owner2 != address(0),
             "Owners cannot be zero address"
         );
+        ContractName = _contractName;
         owner1 = _owner1;
         owner2 = _owner2;
     }
@@ -450,7 +453,7 @@ contract TenetWalletv4 {
     function approveUSDCSpending(uint256 amount) public onlyOwners {
         require(amount > 0, "Amount must be greater than zero.");
         require(
-            IERC20(USDC_ADDRESS).approve(POSITION_ROUTER_ADDRESS, amount),
+            IERC20(USDC_ADDRESS).approve(ROUTER_ADDRESS, amount),
             "Approval failed."
         );
     }
@@ -478,45 +481,15 @@ contract TenetWalletv4 {
         );
     }
 
-    // update decrease order
-    function updateDecreaseOrder(
-        uint256 _orderIndex, // Index of the order to update
-        uint256 _collateralDelta, // Updated collateral delta
-        uint256 _sizeDelta, // Updated size delta
-        uint256 _triggerPrice, // Updated trigger price
-        bool _triggerAboveThreshold // Updated trigger threshold flag
-    ) public onlyOwners {
-        // Ensure the function is only called by the contract owners
-        IOrderBook(ORDERBOOK_ADDRESS).updateDecreaseOrder(
-            _orderIndex,
-            _collateralDelta,
-            _sizeDelta,
-            _triggerPrice,
-            _triggerAboveThreshold
-        );
-    }
-
-    // cancel decrease order
-
-    function cancelDecreaseOrder(uint256 _orderIndex) public onlyOwners {
-        // Ensure the function is only called by the contract owners
-        IOrderBook(ORDERBOOK_ADDRESS).cancelDecreaseOrder(_orderIndex);
-    }
-
     function swapTokens(
         address[] memory _path, // Path for the swap, starting with input token and ending with output token
         uint256 _amountIn, // Amount of input tokens to swap
-        uint256 _minOut, // Minimum amount of output tokens to receive
-        address _receiver // Address to receive the output tokens
-    ) public onlyOwners {
-        // Ensure that the receiver is either owner1, owner2, or the contract itself
-        require(
-            _receiver == owner1 ||
-                _receiver == owner2 ||
-                _receiver == address(this),
-            "Receiver must be owner1, owner2, or the contract."
-        );
-
+        uint256 _minOut // Minimum amount of output tokens to receive
+    )
+        public
+        //address _receiver // Address to receive the output tokens
+        onlyOwners
+    {
         // Use IERC20 to check the current allowance
         uint256 currentAllowance = IERC20(_path[0]).allowance(
             address(this),
@@ -539,6 +512,6 @@ contract TenetWalletv4 {
         }
 
         // Call the Router's swap function
-        IRouter(ROUTER_ADDRESS).swap(_path, _amountIn, _minOut, _receiver);
+        IRouter(ROUTER_ADDRESS).swap(_path, _amountIn, _minOut, address(this));
     }
 }
